@@ -28,25 +28,33 @@ class State:
             if s != None :
                 text += str(s) + " "    
             else :
-                text += "/"
+                text += "/ "
             i = i+1
         
         return text
     
-    def clone(self, b, i):
-        return State(self.b, self.i)
+    def clone(self):
+        arrCpy = [0,0,0,0,0,0,0,0,0]
+        iCopy = self.index
+        index = 0
+
+        for i in range(0,8):
+            arrCpy[index] = self.board[index]
+            index = index + 1
+
+        return State(arrCpy, iCopy)
 
     def move(self, direction):
         if direction == UP:
             check = self.index - 3
-            if check < 9 or check >= 0:
+            if check < 9 and check >= 0:
                 self.board = swap(self.board, self.index, check)
                 self.index = check    
             else:
                 self.board = None
         elif direction == DOWN:
             check = self.index + 3
-            if check < 9 or check >= 0:
+            if check < 9 and check >= 0:
                 self.board = swap(self.board, self.index, check)    
                 self.index = check
             else:
@@ -71,6 +79,8 @@ class State:
             else:
                 self.board = None
 
+
+
 class Tree:
     parent = None
     _id = 0
@@ -94,8 +104,11 @@ def swap(arr, a, b):
 array = [1,2,3,4,5,None,7,8,9]
 
 test = State(array,5)
+test2 = test.clone()
 print(test.to_string())
-test.move(UP)
+test2.move(UP)
+test2.move(LEFT)
+test2.move(LEFT)
+test2.move(LEFT)
 print(test.to_string())
-test.move(RIGHT)
-print(test.to_string())
+print(test2.to_string())
