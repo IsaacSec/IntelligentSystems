@@ -1,3 +1,4 @@
+import operator
 from enum import Enum
 import math
 import copy
@@ -9,17 +10,20 @@ RIGHT = 3
 
 op = []
 close = []
-initial = [2, 4, 5, 7, 6, 8, None, 1, 3]
+initial = [2, 4, 5, 7, 6, 8, 0, 1, 3]
 goal = [1, 2, 3, 4, None, 5, 6, 7, 8]
 
 
 class State:
     board = []
     index = None
+    weight = 0
+    depth = 0
 
-    def __init__(self, b, i):
+    def __init__(self, b, i, d):
         self.board = b
         self.index = i
+        self.depth = d
 
     def to_string(self):
         i = 0
@@ -40,11 +44,11 @@ class State:
 
         return text
 
-    def equals(self, otherState):
-        return self.board == otherState.board
+    def equals(self, other_state):
+        return self.board == other_state.board
 
     def clone(self):
-        return State(copy.copy(self.board), copy.copy(self.index))
+        return State(copy.copy(self.board), copy.copy(self.index), copy.copy(self.depth))
 
     def move(self, direction):
         if direction == UP:
@@ -118,6 +122,7 @@ def search():
             close.append(si)
             move_list = all_moves(si)
             add_nodes(move_list)
+            heuristic()
 
 
 def all_moves(node):
@@ -137,11 +142,12 @@ def all_moves(node):
     # print(up.to_string(), down.to_string(),left.to_string(),right.to_string())
     return movelist
 
+
 def in_close(node):
     index = 0
     limit = len(close)
     
-    while index < limit :
+    while index < limit:
         temp = close[index]
         if node.equals(temp):
             return True
@@ -149,21 +155,45 @@ def in_close(node):
     
     return False
 
+
+def in_open(node):
+    index = 0
+    limit = len(op)
+
+    while index < limit:
+        temp = op[index]
+        if node.equals(temp):
+            return True
+        index = index + 1
+
+    return False
+
+
 def add_nodes(li):
     while len(li) > 0:
         node = li.pop()
+        node.depth += 1
         if node.board is not None:
-            if not in_close(node):
-                print(node.to_string())
+            if not in_close(node) and not in_open(node):
+                # print(node.to_string())
+                get_weight(node)
                 op.append(node)
             # else:
                 # print("in close")
 
 
 #             Todo: Add to tree
+def get_weight(node):
+    node.weight = node.depth + sum(abs(b % 3 - g % 3) + abs(b // 3 - g // 3)
+                                   for b, g in ((node.board.index(i), goal.index(i)) for i in range(1, 9)))
 
 
-array = [1, 2, 3, 4, 5, 6, None, 7, 8]
+# Sort open by the weight
+def heuristic():
+    op.sort(key=operator.attrgetter('weight'))
+
+
+array = [2, 1, 3, None, 4, 6, 8, 7, 5]
 
 #t1 = [1,2,3,4,5,6,7,8,9]
 #t2 = [1,2,3,4,5,6,7,8,9]
@@ -174,7 +204,7 @@ array = [1, 2, 3, 4, 5, 6, None, 7, 8]
 #print(s1.equals(s2))
 
 
-test = State(array, 6)
+test = State(array, 3, 0)
 op.append(test)
 search()
 close.append(test)
