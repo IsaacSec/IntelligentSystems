@@ -40,6 +40,9 @@ class State:
 
         return text
 
+    def equals(self, otherState):
+        return self.board == otherState.board
+
     def clone(self):
         return State(copy.copy(self.board), copy.copy(self.index))
 
@@ -112,9 +115,9 @@ def search():
             return si
         # Make the backward along from si to s0
         else:
+            close.append(si)
             move_list = all_moves(si)
             add_nodes(move_list)
-            close.append(si.board)
 
 
 def all_moves(node):
@@ -134,12 +137,23 @@ def all_moves(node):
     # print(up.to_string(), down.to_string(),left.to_string(),right.to_string())
     return movelist
 
+def in_close(node):
+    index = 0
+    limit = len(close)
+    
+    while index < limit :
+        temp = close[index]
+        if node.equals(temp):
+            return True
+        index = index + 1
+    
+    return False
 
 def add_nodes(li):
     while len(li) > 0:
         node = li.pop()
         if node.board is not None:
-            if node.board not in close:
+            if not in_close(node):
                 print(node.to_string())
                 op.append(node)
             # else:
@@ -151,11 +165,18 @@ def add_nodes(li):
 
 array = [1, 2, 3, 4, 5, 6, None, 7, 8]
 
+#t1 = [1,2,3,4,5,6,7,8,9]
+#t2 = [1,2,3,4,5,6,7,8,9]
+
+#s1 = State(t1, 0)
+#s2 = State(t2, 0)
+
+#print(s1.equals(s2))
+
 
 test = State(array, 6)
 op.append(test)
 search()
-
 close.append(test)
 
 
