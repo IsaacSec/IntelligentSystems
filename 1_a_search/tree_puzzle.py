@@ -1,3 +1,4 @@
+import operator
 from enum import Enum
 import math
 import copy
@@ -9,17 +10,22 @@ RIGHT = 3
 
 op = []
 close = []
-initial = [2, 4, 5, 7, 6, 8, None, 1, 3]
-goal = [1, 2, 3, 4, None, 5, 6, 7, 8]
+initial = [2, 4, 5, 7, 6, 8, 0, 1, 3]
+goal = [1, 2, 3, 8, None, 4, 7, 6, 5]
 
 
 class State:
     board = []
     index = None
+    parent = None
+    weight = 0
+    depth = 0
 
-    def __init__(self, b, i):
+    def __init__(self, b, i, d):
         self.board = b
         self.index = i
+        self.depth = d
+        self.weight = State.get_state_weight(b,d)
 
     def to_string(self):
         i = 0
@@ -39,12 +45,25 @@ class State:
             i = i + 1
 
         return text
+    
+    @staticmethod
+    def get_state_weight(board, depth):
+        weight = depth
 
-    def equals(self, otherState):
-        return self.board == otherState.board
+        for i in range(1,9):
+            bi = board.index(i) 
+            gi = goal.index(i)
+            man_dis = abs(bi % 3 - gi % 3) + abs(bi // 3 - gi // 3)
+            
+            weight = weight + man_dis
+            
+        return weight
+
+    def equals(self, other_state):
+        return self.board == other_state.board
 
     def clone(self):
-        return State(copy.copy(self.board), copy.copy(self.index))
+        return State(copy.copy(self.board), copy.copy(self.index), copy.copy(self.depth))
 
     def move(self, direction):
         if direction == UP:
@@ -82,24 +101,29 @@ class State:
                 self.board = None
         else:
             self.board = None
+        
+        if self.board is not None:
+            self.weight = State.get_state_weight(self.board,self.depth)
+            self.depth = self.depth + 1
 
 
 class Tree:
     parent = None
-    _id = 0
     data = None
     child_left = None
     child_right = None
     child_up = None
     child_down = None
 
-    def __init__(self, p, p_id):
-        if p is not None:
-            self.parent = p
-            self._id = p.id + p_id
+    def __init__(self, p, data):
+        self.parent = p
+        self.data = data
 
 
 #     Todo: Add methods to add new Tree to the tree, update the parent and find all nodes from so to goal
+
+
+
 
 
 def swap(arr, a, b):
@@ -108,40 +132,53 @@ def swap(arr, a, b):
 
 
 def search():
+    total_moves = 0
     while len(op) > 0:
+        total_moves = total_moves + 1
         si = op.pop(0)
+        
+        print("W: "+str(si.weight)+" D: "+str(si.depth))
+        print(si.to_string())
+        print("-------------------")
+
         if si.board == goal:
             print("Goal: ", si.to_string())
+            print("Total: "+str(total_moves))
             return si
         # Make the backward along from si to s0
         else:
             close.append(si)
-            move_list = all_moves(si)
-            add_nodes(move_list)
+            children = gen_children(si)
+            add_nodes(children)
+            heuristic()
 
 
-def all_moves(node):
-    movelist =[]
+def gen_children (node):
+    children = []
+
     up = node.clone()
-    up.move(UP)
     down = node.clone()
-    down.move(DOWN)
     left = node.clone()
-    left.move(LEFT)
     right = node.clone()
+    
+    up.move(UP)
+    down.move(DOWN)
+    left.move(LEFT)
     right.move(RIGHT)
-    movelist.append(up)
-    movelist.append(down)
-    movelist.append(left)
-    movelist.append(right)
+
+    children.append(up)
+    children.append(down)
+    children.append(left)
+    children.append(right)
     # print(up.to_string(), down.to_string(),left.to_string(),right.to_string())
-    return movelist
+    return children
+
 
 def in_close(node):
     index = 0
     limit = len(close)
     
-    while index < limit :
+    while index < limit:
         temp = close[index]
         if node.equals(temp):
             return True
@@ -153,7 +190,7 @@ def in_open(node):
     index = 0
     limit = len(op)
     
-    while index < limit :
+    while index < limit:
         temp = op[index]
         if node.equals(temp):
             return True
@@ -164,18 +201,27 @@ def in_open(node):
 def add_nodes(li):
     while len(li) > 0:
         node = li.pop()
+        
         if node.board is not None:
+            
             if not in_close(node) and not in_open(node):
-                print(node.to_string())
                 op.append(node)
             # else:
                 # print("in close")
 
 
 #             Todo: Add to tree
+def get_weight(node):
+    node.weight = node.depth + sum(abs(b % 3 - g % 3) + abs(b // 3 - g // 3)
+                                   for b, g in ((node.board.index(i), goal.index(i)) for i in range(1, 9)))
 
 
-array = [1, 2, 3, None, 5, 6, 4, 7, 8]
+# Sort open by the weight
+def heuristic():
+    op.sort(key=operator.attrgetter('weight'))
+
+
+array = [2, 8, 3, 1, 6, 4, 7, None, 5]
 
 #t1 = [1,2,3,4,5,6,7,8,9]
 #t2 = [1,2,3,4,5,6,7,8,9]
@@ -186,7 +232,10 @@ array = [1, 2, 3, None, 5, 6, 4, 7, 8]
 #print(s1.equals(s2))
 
 
-test = State(initial, 6)
+test = State(array, 7, 0)
+
+tree = Tree(None, 0)
+
 op.append(test)
 search()
 close.append(test)
