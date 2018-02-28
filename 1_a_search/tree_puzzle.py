@@ -149,11 +149,23 @@ def in_close(node):
     
     return False
 
+def in_open(node):
+    index = 0
+    limit = len(op)
+    
+    while index < limit :
+        temp = op[index]
+        if node.equals(temp):
+            return True
+        index = index + 1
+    
+    return False
+
 def add_nodes(li):
     while len(li) > 0:
         node = li.pop()
         if node.board is not None:
-            if not in_close(node):
+            if not in_close(node) and not in_open(node):
                 print(node.to_string())
                 op.append(node)
             # else:
@@ -163,7 +175,7 @@ def add_nodes(li):
 #             Todo: Add to tree
 
 
-array = [1, 2, 3, 4, 5, 6, None, 7, 8]
+array = [1, 2, 3, None, 5, 6, 4, 7, 8]
 
 #t1 = [1,2,3,4,5,6,7,8,9]
 #t2 = [1,2,3,4,5,6,7,8,9]
@@ -174,7 +186,7 @@ array = [1, 2, 3, 4, 5, 6, None, 7, 8]
 #print(s1.equals(s2))
 
 
-test = State(array, 6)
+test = State(initial, 6)
 op.append(test)
 search()
 close.append(test)
