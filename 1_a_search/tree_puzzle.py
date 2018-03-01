@@ -15,13 +15,14 @@ goal = [1, 2, 3, 8, None, 4, 7, 6, 5]
 
 
 class State:
+    parent = None
     board = []
     index = None
-    parent = None
     weight = 0
     depth = 0
 
-    def __init__(self, b, i, d):
+    def __init__(self, p, b, i, d):
+        self.parent = p
         self.board = b
         self.index = i
         self.depth = d
@@ -29,7 +30,7 @@ class State:
 
     def to_string(self):
         i = 0
-        text = ""
+        text = "+-------+"
 
         if self.board is None:
             text = "[]"
@@ -37,12 +38,16 @@ class State:
 
         for s in self.board:
             if i % 3 == 0:
-                text += "\n"
+                text += "\n| "
             if s is not None:
                 text += str(s) + " "
             else:
                 text += "/ "
+            if i % 3 == 2:
+                text += "|"
             i = i + 1
+
+        text += "\n+-------+"
 
         return text
     
@@ -63,7 +68,7 @@ class State:
         return self.board == other_state.board
 
     def clone(self):
-        return State(copy.copy(self.board), copy.copy(self.index), copy.copy(self.depth))
+        return State(self, copy.copy(self.board), copy.copy(self.index), copy.copy(self.depth))
 
     def move(self, direction):
         if direction == UP:
@@ -106,6 +111,19 @@ class State:
             self.weight = State.get_state_weight(self.board,self.depth)
             self.depth = self.depth + 1
 
+    def print_backtrace(self):
+        
+        current = self
+
+        while current is not None:
+            print(current.to_string())
+            
+            if current.parent is not None:
+                print("    | ")
+                print("    v ")
+
+            current = current.parent
+
 
 class Tree:
     parent = None
@@ -134,23 +152,25 @@ def swap(arr, a, b):
 def search():
     total_moves = 0
     while len(op) > 0:
-        total_moves = total_moves + 1
+
         si = op.pop(0)
-        
-        print("W: "+str(si.weight)+" D: "+str(si.depth))
-        print(si.to_string())
-        print("-------------------")
+        #print("W: "+str(si.weight)+" D: "+str(si.depth))
+        #print(si.to_string())
+        #print("-------------------")
 
         if si.board == goal:
-            print("Goal: ", si.to_string())
-            print("Total: "+str(total_moves))
-            return si
-        # Make the backward along from si to s0
+
+            print("Number of moves: "+str(total_moves))
+            si.print_backtrace()
+            break
+
         else:
             close.append(si)
             children = gen_children(si)
             add_nodes(children)
             heuristic()
+
+        total_moves = total_moves + 1
 
 
 def gen_children (node):
@@ -206,11 +226,9 @@ def add_nodes(li):
             
             if not in_close(node) and not in_open(node):
                 op.append(node)
-            # else:
-                # print("in close")
 
 
-#             Todo: Add to tree
+# Todo: Add to tree
 def get_weight(node):
     node.weight = node.depth + sum(abs(b % 3 - g % 3) + abs(b // 3 - g // 3)
                                    for b, g in ((node.board.index(i), goal.index(i)) for i in range(1, 9)))
@@ -232,9 +250,7 @@ array = [2, 8, 3, 1, 6, 4, 7, None, 5]
 #print(s1.equals(s2))
 
 
-test = State(array, 7, 0)
-
-tree = Tree(None, 0)
+test = State(None, array, 7, 0)
 
 op.append(test)
 search()
