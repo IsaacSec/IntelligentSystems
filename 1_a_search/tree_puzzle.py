@@ -1,5 +1,4 @@
 import operator
-from enum import Enum
 import math
 import copy
 
@@ -10,9 +9,10 @@ RIGHT = 3
 
 op = []
 close = []
-initial = [2, 4, 5, 7, 6, 8, 0, 1, 3]
+initial = [2, 8, 3, 1, 6, 4, 7, None, 5]
 goal = [1, 2, 3, 8, None, 4, 7, 6, 5]
 
+# --------------------- State Class ------------------------
 
 class State:
     parent = None
@@ -58,6 +58,7 @@ class State:
         for i in range(1,9):
             bi = board.index(i) 
             gi = goal.index(i)
+            # Calculate the Manhattan distance
             man_dis = abs(bi % 3 - gi % 3) + abs(bi // 3 - gi // 3)
             
             weight = weight + man_dis
@@ -125,56 +126,39 @@ class State:
             current = current.parent
 
 
-class Tree:
-    parent = None
-    data = None
-    child_left = None
-    child_right = None
-    child_up = None
-    child_down = None
+# -------- Independent Functions ---------------
 
-    def __init__(self, p, data):
-        self.parent = p
-        self.data = data
-
-
-#     Todo: Add methods to add new Tree to the tree, update the parent and find all nodes from so to goal
-
-
-
-
-
+# Swap values of two positions in an array
 def swap(arr, a, b):
     arr[a], arr[b] = arr[b], arr[a]
     return arr
 
+# -------- Global Variable dependent functions -----------
 
 def search():
     total_moves = 0
     while len(op) > 0:
 
         si = op.pop(0)
-        #print("W: "+str(si.weight)+" D: "+str(si.depth))
-        #print(si.to_string())
-        #print("-------------------")
 
         if si.board == goal:
 
-            print("Number of moves: "+str(total_moves))
+            print("\nNumber of moves: "+str(total_moves)+"\n")
             si.print_backtrace()
             break
 
         else:
             close.append(si)
-            children = gen_children(si)
-            add_nodes(children)
+            moves = gen_moves(si)
+            add_to_open(moves)
             heuristic()
 
         total_moves = total_moves + 1
 
+# Generates a list with all the possible resulting states given a parent state
 
-def gen_children (node):
-    children = []
+def gen_moves (node):
+    moves = []
 
     up = node.clone()
     down = node.clone()
@@ -186,13 +170,25 @@ def gen_children (node):
     left.move(LEFT)
     right.move(RIGHT)
 
-    children.append(up)
-    children.append(down)
-    children.append(left)
-    children.append(right)
-    # print(up.to_string(), down.to_string(),left.to_string(),right.to_string())
-    return children
+    moves.append(up)
+    moves.append(down)
+    moves.append(left)
+    moves.append(right)
+    
+    return moves
 
+# Adds every element in li to the Open list skipping states with None boards
+
+def add_to_open(li):
+    while len(li) > 0:
+        node = li.pop()
+        
+        if node.board is not None:
+            
+            if not in_close(node) and not in_open(node):
+                op.append(node)
+
+# Checks if the node/State exists in the Close list
 
 def in_close(node):
     index = 0
@@ -206,6 +202,8 @@ def in_close(node):
     
     return False
 
+# Checks if the node/State exists in the Close list
+
 def in_open(node):
     index = 0
     limit = len(op)
@@ -218,57 +216,16 @@ def in_open(node):
     
     return False
 
-def add_nodes(li):
-    while len(li) > 0:
-        node = li.pop()
-        
-        if node.board is not None:
-            
-            if not in_close(node) and not in_open(node):
-                op.append(node)
-
-
-# Todo: Add to tree
-def get_weight(node):
-    node.weight = node.depth + sum(abs(b % 3 - g % 3) + abs(b // 3 - g // 3)
-                                   for b, g in ((node.board.index(i), goal.index(i)) for i in range(1, 9)))
-
 
 # Sort open by the weight
 def heuristic():
     op.sort(key=operator.attrgetter('weight'))
 
 
-array = [2, 8, 3, 1, 6, 4, 7, None, 5]
-
-#t1 = [1,2,3,4,5,6,7,8,9]
-#t2 = [1,2,3,4,5,6,7,8,9]
-
-#s1 = State(t1, 0)
-#s2 = State(t2, 0)
-
-#print(s1.equals(s2))
 
 
-test = State(None, array, 7, 0)
+# ---------- Implementation ---------------
 
-op.append(test)
+s0 = State(None, initial, 7, 0)
+op.append(s0)
 search()
-close.append(test)
-
-
-
-
-
-
-# moves = all_moves(test)
-# add_nodes(moves)
-# test1 = moves.pop(1)
-# test1 = test1.move(DOWN)
-# print(test1.to_string())
-# search(test)
-# print(test.to_string())
-# test2.move(UP)
-# test2.move(LEFT)
-# print(test.to_string())
-# print(test2.to_string())
