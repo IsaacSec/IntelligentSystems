@@ -29,9 +29,21 @@ plt.show()
 
 logistic = linear_model.LogisticRegression(C=1)
 logistic.fit(X_train, y_train)
-print("Training set score: {:.3f}".format(logistic.score(X_train, y_train)))
+print("Training set score 1: {:.3f}".format(logistic.score(X_train, y_train)))
 
-print("Test set score: {:.3f}".format(logistic.score(X_test, y_test)))
+print("Test set score 1 : {:.3f}".format(logistic.score(X_test, y_test)))
+
+logistic = linear_model.LogisticRegression(C=10)
+logistic.fit(X_train, y_train)
+print("Training set score 2: {:.3f}".format(logistic.score(X_train, y_train)))
+
+print("Test set score 2: {:.3f}".format(logistic.score(X_test, y_test)))
+
+logistic = linear_model.LogisticRegression(C=.001)
+logistic.fit(X_train, y_train)
+print("Training set score 3: {:.3f}".format(logistic.score(X_train, y_train)))
+
+print("Test set score 3: {:.3f}".format(logistic.score(X_test, y_test)))
 
 
 prediction = logistic.predict(X_test)
